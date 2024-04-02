@@ -1,0 +1,15 @@
+eeprom_i2c_bus=i2c-9
+eeprom_chip_type=24c64
+eeprom_chip_address=50
+vendor=SunFounder
+dto_max_current=5000
+dto_i2c_enable=1
+dto_spi_enable=0
+eeprom_pcb_code="P0307V10"
+product_name="Pironman U1"
+eeprom_file="o1903v10_pironman_u1.eep"
+dt_blob="sunfounder-pironmanu1.dtbo"
+dto_ir_enable=1
+dto_ir_pin=12
+dto_i2s_dac_enable=-
+eeprom_custom_data=

@@ -1,0 +1,6 @@
+product_uuid 9daeea78-0000-076e-0032-582369ac3e02
+product_id 0x076e
+product_ver 0x0032
+vendor "SunFounder"
+product "Robot Hat 5"
+dt_blob "sunfounder-robothat5.dtbo"

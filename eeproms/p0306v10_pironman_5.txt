@@ -1,0 +1,6 @@
+product_uuid 9daeea78-0000-0132-000a-582369ac3e02
+product_id 0x0132
+product_ver 0x000a
+vendor "SunFounder"
+product "Pironman 5"
+dt_blob "sunfounder-pironman5.dtbo"
