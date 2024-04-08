@@ -37,3 +37,84 @@ dtc -@ -Hepapr -I dts -O dtb -o robot-hat-5.dtbo robot-hat-5-overlay.dts
 Enable i2c-9
 sudo dtoverlay i2c-gpio i2c_gpio_sda=0 i2c_gpio_scl=1 bus=9
 
+## 上传dts文件到linux仓库
+
+> 只适用于SunFounder员工。Only for SunFounder Employees。
+
+```bash
+# 克隆SunFounder的linux仓库
+git clone git@github.com:sunfounder/linux.git
+cd linux
+# 增加Raspberry Pi的linux仓库为上游
+git remote add upstream https://github.com/raspberrypi/linux.git
+# 拉取上游的最新代码 （你可能需要修改分支名）
+git fetch upstream rpi-6.1.y
+# 合并上游的最新代码 （你可能需要修改分支名）
+git merge upstream/rpi-6.1.y
+```
+
+现在你需要复制你的dts文件到linux仓库中，把dts文件放到`arch/arm/boot/dts/overlays/`目录下。
+
+```bash
+# 添加你的dts文件到git （你可能需要修改文件名）
+git add arch/arm/boot/dts/overlays/sunfounder-pironman5-overlay.dts
+# 提交你的dts文件 （你可能需要修改提交信息）
+git commit -m "Add SunFounder Pironman 5 overlay"
+# 推送你的dts文件到SunFounder的linux仓库 （你可能需要修改分支名）
+git push origin rpi-6.1.y
+```
+
+修改Makefile（`arch\arm\boot\dts\overlays\Makefile`）, 让他可以被一起编译，注意要严格按照字母顺序排列。并且，写入的应该是输出的dtbo文件名。
+
+```diff
+    ...
+	ssd1306-spi.dtbo \
+	ssd1331-spi.dtbo \
+	ssd1351-spi.dtbo \
++	sunfounder-pironman5.dtbo \
+	superaudioboard.dtbo \
+	sx150x.dtbo \
+	tc358743.dtbo \
+	tc358743-audio.dtbo \
+    ...
+```
+
+修改Readme文件（`arch\arm\boot\dts\overlays\README`），添加你的overlay的说明。注意只能使用空格，不能用TAB，格式要完全和其他的一样。每一段要和上下之间各隔两行。
+
+```diff
+    ...
+    
+    
+    Name:   ssd1351-spi
+    Info:   Overlay for SSD1351 OLED via SPI using fbtft staging driver.
+    Load:   dtoverlay=ssd1351-spi,<param>=<val>
+    Params: speed                   SPI bus speed (default 4500000)
+            rotate                  Display rotation (0, 90, 180 or 270; default 0)
+            fps                     Delay between frame updates (default 25)
+            debug                   Debug output level (0-7; default 0)
+            dc_pin                  GPIO pin for D/C (default 24)
+            reset_pin               GPIO pin for RESET (default 25)
++    
++    
++    Name:   sunfounder-pironman5
++    Info:   Overlay for SunFounder Pironman 5
++    Load:   dtoverlay=sunfounder-pironman5,<param>=<val>
++    Params: ir                      Enable IR or not (on or off, default on)
++            ir_pins                 Change IR receiver pin (default 12)
++    
++    
+    Name:   superaudioboard
+    Info:   Configures the SuperAudioBoard sound card
+    Load:   dtoverlay=superaudioboard,<param>=<val>
+    Params: gpiopin                 GPIO pin for codec reset
+    
+    
+    ...
+```
+
+提交Pull Request
+1. 转到[仓库的Pull requests页面](https://github.com/sunfounder/linux/pulls)
+2. 点击 **New pull requests**。
+3. 在 **Comparing changes** 页面，确认自己要上传的修改有没有问题，点击 **Create pull request**。
+4. 在 **Open a pull request** 页面，填写标题和描述，然后点击 提交。
+5. 等待审核通过，可以留意自己的邮箱，或者到[树莓派Linux仓库的Pull requests页面](https://github.com/raspberrypi/linux/pulls)找到自己提交的PR，确认情况。可能会有不合规的情况，需要修改后再次提交。

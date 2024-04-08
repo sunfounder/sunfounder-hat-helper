@@ -42,7 +42,7 @@ spi_template='''{{
 ir_template_1 = '''{{
         target-path = "/";
         __overlay__ {{
-            gpio_ir: ir-receiver@12 {{
+            gpio_ir: ir-receiver@{pin:x} {{
                 compatible = "gpio-ir-receiver";
                 pinctrl-names = "default";
                 pinctrl-0 = <&gpio_ir_pins>;
@@ -61,7 +61,7 @@ ir_template_1 = '''{{
 ir_template_2 = '''{{
         target = <&gpio>;
         __overlay__ {{
-            gpio_ir_pins: gpio_ir_pins@12 {{
+            gpio_ir_pins: gpio_ir_pins@{pin:x} {{
                 brcm,pins = <{pin}>;
                 brcm,function = <0>;
                 brcm,pull = <2>;
@@ -110,7 +110,8 @@ content = '''/dts-v1/;
     compatible = "brcm,bcm2835";
 {fragments}
 {overrides}
-}};'''
+}};
+'''
 
 fragment_template = '''
     fragment@{count} {node}'''
@@ -134,8 +135,8 @@ if args.spi:
     fragments += fragment_template.format(count=fragment_count, node=node)
     fragment_count += 1
 if args.ir:
-    node1 = ir_template_1.format(pin=args.ir_gpio)
-    node2 = ir_template_2.format(pin=args.ir_gpio)
+    node1 = ir_template_1.format(pin=int(args.ir_gpio))
+    node2 = ir_template_2.format(pin=int(args.ir_gpio))
     fragments += fragment_template.format(count=fragment_count, node=node1)
     fragment_count += 1
     fragments += fragment_template.format(count=fragment_count, node=node2)
@@ -158,7 +159,7 @@ if len(override_list) > 0:
     overrides = "    __overrides__ {\n"
     for override in override_list:
         overrides += f"        {override}\n"
-    overrides += "    };\n"
+    overrides += "    };"
 
 content = content.format(fragments=fragments, overrides=overrides)
 
