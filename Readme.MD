@@ -55,15 +55,6 @@ git merge upstream/rpi-6.1.y
 
 现在你需要复制你的dts文件到linux仓库中，把dts文件放到`arch/arm/boot/dts/overlays/`目录下。
 
-```bash
-# 添加你的dts文件到git （你可能需要修改文件名）
-git add arch/arm/boot/dts/overlays/sunfounder-pironman5-overlay.dts
-# 提交你的dts文件 （你可能需要修改提交信息）
-git commit -m "Add SunFounder Pironman 5 overlay"
-# 推送你的dts文件到SunFounder的linux仓库 （你可能需要修改分支名）
-git push origin rpi-6.1.y
-```
-
 修改Makefile（`arch\arm\boot\dts\overlays\Makefile`）, 让他可以被一起编译，注意要严格按照字母顺序排列。并且，写入的应该是输出的dtbo文件名。
 
 ```diff
@@ -112,9 +103,25 @@ git push origin rpi-6.1.y
     ...
 ```
 
+修改完了以后，提交到SunFounder的linux仓库。
+
+> [!IMPORTANT]
+> 注意，再Windows下可能会产生一些莫名的变更，这些变更可能会无法取消，**请务必不要提交这些变更**。只需要提交dts， Makefile以及README文件的变更。
+
+```bash
+# 添加你的dts文件到git （你可能需要修改文件名）
+git add arch/arm/boot/dts/overlays/sunfounder-pironman5-overlay.dts arch/arm/boot/dts/overlays/Makefile arch/arm/boot/dts/overlays/README
+# 提交你的dts文件 （你可能需要修改提交信息）
+git commit -m "Add SunFounder Pironman 5 overlay"
+# 推送你的dts文件到SunFounder的linux仓库 （你可能需要修改分支名）
+git push origin rpi-6.1.y
+```
+
 提交Pull Request
 1. 转到[仓库的Pull requests页面](https://github.com/sunfounder/linux/pulls)
 2. 点击 **New pull requests**。
 3. 在 **Comparing changes** 页面，确认自己要上传的修改有没有问题，点击 **Create pull request**。
 4. 在 **Open a pull request** 页面，填写标题和描述，然后点击 提交。
 5. 等待审核通过，可以留意自己的邮箱，或者到[树莓派Linux仓库的Pull requests页面](https://github.com/raspberrypi/linux/pulls)找到自己提交的PR，确认情况。可能会有不合规的情况，需要修改后再次提交。
+
+如果PR被拒绝了，一般是有什么问题没有解决，可以根据反馈修改，重新push到自己的分支，PR会自动更新。在PR页面可以看到更新的情况。
