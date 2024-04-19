@@ -10,6 +10,7 @@ parser.add_argument('-s', '--spi', help='Enable SPI')
 parser.add_argument('-r', '--ir', help='Enable IR')
 parser.add_argument('-g', '--ir-gpio', help='GPIO pin for IR')
 parser.add_argument('-d', '--i2s-dac', help='Enable I2S DAC')
+parser.add_argument('-p', '--gpio-poweroff', help='Enable GPIO poweroff')
 parser.add_argument('-f', '--force', action='store_true', help='Force overwrite')
 args = parser.parse_args()
 
@@ -100,7 +101,30 @@ i2s_template_3 = '''{{
 		}};
 	}};'''
 
+gpio_poweroff_template_1 = '''{{
+		target-path = "/";
+		__overlay__ {{
+			power_ctrl: power_ctrl {{
+				compatible = "gpio-poweroff";
+				gpios = <&gpio {pin} 0>;
+				force;
+			}};
+		}};
+	}};'''
 
+gpio_poweroff_template_2 = '''{{
+		target = <&gpio>;
+		__overlay__ {{
+			power_ctrl_pins: power_ctrl_pins {{
+				brcm,pins = <{pin}>;
+				brcm,function = <1>; // out
+			}};
+		}};
+    }};'''
+
+gpio_overrides = [
+    'poweroff_pin = <&power_ctrl>,"gpios:4",<&power_ctrl_pins>,"brcm,pins:0";',
+]
 
 
 content = '''/dts-v1/;
@@ -153,6 +177,14 @@ if args.i2s_dac:
     fragment_count += 1
     fragments += fragment_template.format(count=fragment_count, node=node3)
     fragment_count += 1
+if args.gpio_poweroff:
+    node1 = gpio_poweroff_template_1.format(pin=int(args.gpio_poweroff))
+    node2 = gpio_poweroff_template_2.format(pin=int(args.gpio_poweroff))
+    fragments += fragment_template.format(count=fragment_count, node=node1)
+    fragment_count += 1
+    fragments += fragment_template.format(count=fragment_count, node=node2)
+    fragment_count += 1
+    override_list += gpio_overrides
 
 overrides = ""
 if len(override_list) > 0:

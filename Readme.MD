@@ -47,10 +47,14 @@ git clone git@github.com:sunfounder/linux.git
 cd linux
 # 增加Raspberry Pi的linux仓库为上游
 git remote add upstream https://github.com/raspberrypi/linux.git
+```
+
+确认当前分支是最新的活跃分支。直接访问https://github.com/raspberrypi/linux，看分支是哪个，哪个就是活跃分支。确定了活跃分之后，你可能需要先切换到活跃分支。如rpi-6.6.y
+```bash
+# 切换到活跃分支 （你可能需要修改分支名）
+git checkout rpi-6.6.y
 # 拉取上游的最新代码 （你可能需要修改分支名）
-git fetch upstream rpi-6.1.y
-# 合并上游的最新代码 （你可能需要修改分支名）
-git merge upstream/rpi-6.1.y
+git pull upstream rpi-6.6.y
 ```
 
 现在你需要复制你的dts文件到linux仓库中，把dts文件放到`arch/arm/boot/dts/overlays/`目录下。
@@ -125,3 +129,14 @@ git push origin rpi-6.1.y
 5. 等待审核通过，可以留意自己的邮箱，或者到[树莓派Linux仓库的Pull requests页面](https://github.com/raspberrypi/linux/pulls)找到自己提交的PR，确认情况。可能会有不合规的情况，需要修改后再次提交。
 
 如果PR被拒绝了，一般是有什么问题没有解决，可以根据反馈修改，重新push到自己的分支，PR会自动更新。在PR页面可以看到更新的情况。
+
+提交完成后，你最好把我们叉过来的分支也同步一下，这样以后再提交PR的时候就不会有冲突了。
+
+```bash
+# 同步远程仓库（你可能需要修改分支名）
+git pull upstream rpi-6.6.y
+# 推送到自己的分支（你可能需要修改分支名）
+git push origin rpi-6.6.y
+```
+
+这样就完成啦

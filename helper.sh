@@ -17,6 +17,7 @@ DEFAULT_SPI_ENABLE="-"
 DEFAULT_IR_ENABLE="-"
 DEFAULT_IR_PIN=0
 DEFAULT_I2S_DAC_ENABLE="-"
+DEFAULT_GPIO_POWEROFF=0
 
 # 检查是否存在配置文件
 if [ -f "$CONFIG_FILE" ]; then
@@ -47,6 +48,7 @@ check_config "dto_spi_enable" "$DEFAULT_SPI_ENABLE"
 check_config "dto_ir_enable" "$DEFAULT_IR_ENABLE"
 check_config "dto_ir_pin" "$DEFAULT_IR_PIN"
 check_config "dto_i2s_dac_enable" "$DEFAULT_I2S_DAC_ENABLE"
+check_config "dto_gpio_poweroff" "$DEFAULT_GPIO_POWEROFF"
 
 CHIP_TYPES=(
     "24c32"
@@ -104,6 +106,10 @@ create_dtoverlay() {
         elif [ "$dto_i2s_dac_enable" == "0" ]; then
             i2s_dac_enable="关闭"
         fi
+        local gpio_power_off="引脚未设置"
+        if [ "$dto_gpio_poweroff" -ne 0 ]; then
+            gpio_power_off="GPIO$dto_gpio_poweroff"
+        fi
         local options=(
             "<" "返回"
             "1" "产品名称: $product_name"
@@ -113,6 +119,7 @@ create_dtoverlay() {
             "5" "SPI: $spi_enable"
             "6" "IR: $ir"
             "7" "I2S DAC: $i2s_dac_enable"
+            "8" "GPIO Power Off: $gpio_power_off"
             "=" "生成 DT Overlay"
         )
         select=$(whiptail --title "创建 DT Overlay" --menu "" 15 78 8 "${options[@]}" 3>&1 1>&2 2>&3)
@@ -218,6 +225,13 @@ create_dtoverlay() {
                     sed -i "/^dto_i2s_dac_enable=/c\dto_i2s_dac_enable=$dto_i2s_dac_enable" "$CONFIG_FILE"
                 fi
             ;;
+            "8") # GPIO Power Off
+                result=$(whiptail --title "GPIO Power Off" --inputbox "GPIO Power off 设置，会在树莓派关机后，把一个GPIO引脚拉高。请输入GPIO引脚(0表示未设置):" 10 60 "$dto_gpio_poweroff" 3>&1 1>&2 2>&3)
+                if [ -n "$result" ]; then
+                    dto_gpio_poweroff=$result
+                    sed -i "/^dto_gpio_poweroff=/c\dto_gpio_poweroff=$dto_gpio_poweroff" "$CONFIG_FILE"
+                fi
+            ;;
             "=") # 生成 DT Overlay
                 if [ -z "$product_name" ] || [ -z "$vendor" ]; then
                     whiptail --title "错误" --msgbox "请先输入产品名称和公司名称" 8 78
@@ -252,6 +266,10 @@ create_dtoverlay() {
                 if [ "$dto_i2s_dac_enable" != "-" ]; then
                     msg+="开启I2S DAC, "
                     command+=" --i2s-dac $dto_i2s_dac_enable"
+                fi
+                if [ "$dto_gpio_poweroff" -ne 0 ]; then
+                    msg+="设置GPIO Power-Off GPIO$dto_gpio_poweroff, "
+                    command+=" --gpio-poweroff $dto_gpio_poweroff"
                 fi
                 msg+="\n\n生成命令: $command\n"
                 msg+="是否生成 DT Overlay?"
