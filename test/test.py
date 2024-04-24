@@ -8,37 +8,48 @@ product_ver = None
 pcb_id = None
 vendor = None
 product_uuid = None
+hat_path = None
+for file in os.listdir('/proc/device-tree/'):
+    if file.startswith('hat'):
+        hat_path = f"/proc/device-tree/{file}"
+        hat_type = 0
+        if 'type' in file:
+            hat_type = file.split('_type')[1]
+        print(f"Hat is detected. type: {hat_type}")
+        break
 
-if not os.path.exists("/proc/device-tree/hat"):
+else:
     print("Hat is not detected")
     exit(1)
+
 if not os.path.exists("/proc/device-tree/chosen/power/max_current"):
     print("Max Current is not set")
 else:
     with open("/proc/device-tree/chosen/power/max_current", "rb") as f:
         max_current = f.read()
         max_current = struct.unpack(">I", max_current)[0]
+        print(f"Max Current: {max_current}")
 
-with open("/proc/device-tree/hat/product", "r") as f:
+with open(f"{hat_path}/product", "r") as f:
     product = f.read()
-    print(f"product: {product}")
+    print(f"Product: {product}")
 
-with open("/proc/device-tree/hat/product_id", "r") as f:
+with open(f"{hat_path}/product_id", "r") as f:
     product_id = f.read()[:-1]
     product_id = int(product_id, 16)
 
-with open("/proc/device-tree/hat/product_ver", "r") as f:
+with open(f"{hat_path}/product_ver", "r") as f:
     product_ver = f.read()[:-1]
     product_ver = int(product_ver, 16)
 
 pcb_id = f"P{product_id:04d}V{product_ver:02d}"
-print(f"pcb_id: {pcb_id}")
+print(f"Product ID: {pcb_id}")
     
-with open("/proc/device-tree/hat/vendor", "r") as f:
+with open(f"{hat_path}/vendor", "r") as f:
     vendor = f.read()
-print(f"vendor: {vendor}")
+print(f"Vendor: {vendor}")
 
-with open("/proc/device-tree/hat/uuid", "r") as f:
+with open(f"{hat_path}/uuid", "r") as f:
     product_uuid = f.read()
-print(f"product_uuid: {product_uuid}")
+print(f"Product UUID: {product_uuid}")
 
