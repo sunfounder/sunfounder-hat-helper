@@ -1,0 +1,1 @@
+sudo bash ./eepflash.sh -y -w -f=p0703v10_pipower_3.eep -t=24c64 -a=52 -d=1
