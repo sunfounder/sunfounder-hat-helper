@@ -19,23 +19,34 @@ This command will create a eeprom file and a source txt file in the eeproms fold
 
 ## Device Tree Overlay:
 
+```
 python3 ./scripts/create_dtoverlay.py 
+```
 
 robothat eeprom:
+```
 ./bin/eepmake eeproms/o1903v12_robot_hat_5.txt eeproms/o1903v12_robot_hat_5.eep overlays/
+```
 
 pironman u1:
+```
 python3 create.py -i O1903V10 -n "Pironman U1" -d "sunfounder-pironmanu1.dtbo" -f
 cd overlays
 dtc -@ -Hepapr -I dts -O dtb -o sunfounder-pironmanu1.dtbo sunfounder-pironmanu1-overlay.dts
 cd ..
 ./bin/eepmake eeproms/o1903v10_pironman_u1.txt eeproms/o1903v12_pironman_u1.eep
+```
 
 Compile dtbo
+```
 dtc -@ -Hepapr -I dts -O dtb -o robot-hat-5.dtbo robot-hat-5-overlay.dts
+```
 
 Enable i2c-9
+
+```
 sudo dtoverlay i2c-gpio i2c_gpio_sda=0 i2c_gpio_scl=1 bus=9
+```
 
 ## 上传dts文件到linux仓库
 
