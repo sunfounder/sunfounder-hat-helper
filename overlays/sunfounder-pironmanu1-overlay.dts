@@ -19,15 +19,9 @@
         };
     };
     fragment@2 {
-        target = <&spi0>;
-        __overlay__ {
-            status = "disabled";
-        };
-    };
-    fragment@3 {
         target-path = "/";
         __overlay__ {
-            gpio_ir: ir-receiver@12 {
+            gpio_ir: ir-receiver@c {
                 compatible = "gpio-ir-receiver";
                 pinctrl-names = "default";
                 pinctrl-0 = <&gpio_ir_pins>;
@@ -42,10 +36,10 @@
             };
         };
     };
-    fragment@4 {
+    fragment@3 {
         target = <&gpio>;
         __overlay__ {
-            gpio_ir_pins: gpio_ir_pins@12 {
+            gpio_ir_pins: gpio_ir_pins@c {
                 brcm,pins = <12>;
                 brcm,function = <0>;
                 brcm,pull = <2>;
@@ -56,5 +50,4 @@
         ir = <&gpio_ir>,"status";
         ir_pins = <&gpio_ir>,"gpios:4", <&gpio_ir>,"reg:0", <&gpio_ir_pins>,"brcm,pins:0", <&gpio_ir_pins>,"reg:0";
     };
-
 };

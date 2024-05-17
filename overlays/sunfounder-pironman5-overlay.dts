@@ -19,13 +19,13 @@
     fragment@2 {
         target-path = "/";
         __overlay__ {
-            gpio_ir: ir-receiver@c {
+            gpio_ir: ir-receiver@d {
                 compatible = "gpio-ir-receiver";
                 pinctrl-names = "default";
                 pinctrl-0 = <&gpio_ir_pins>;
 
                 // pin number, high or low
-                gpios = <&gpio 12 1>;
+                gpios = <&gpio 13 1>;
 
                 // parameter for keymap name
                 linux,rc-map-name = "rc-rc6-mce";
@@ -37,8 +37,8 @@
     fragment@3 {
         target = <&gpio>;
         __overlay__ {
-            gpio_ir_pins: gpio_ir_pins@c {
-                brcm,pins = <12>;
+            gpio_ir_pins: gpio_ir_pins@d {
+                brcm,pins = <13>;
                 brcm,function = <0>;
                 brcm,pull = <2>;
             };
