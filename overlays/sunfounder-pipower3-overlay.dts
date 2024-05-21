@@ -5,10 +5,10 @@
     compatible = "brcm,bcm2835";
 
     fragment@0 {
-        target = <&chosen>;
+        target-path = "/chosen";
         __overlay__ {
-            power {
-                max_current = <5000>;
+            power: power {
+                hat_current_supply = <5000>;
             };
         };
     };

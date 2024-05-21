@@ -4,7 +4,7 @@ import os
 
 parser = argparse.ArgumentParser(description='Create dtoverlay')
 parser.add_argument('-n', '--name', help='Name of dtoverlay', required=True)
-parser.add_argument('-c', '--max-current', help='Max current')
+parser.add_argument('-c', '--hat-current-supply', help='Hat current Supply')
 parser.add_argument('-i', '--i2c', help='Enable I2C')
 parser.add_argument('-s', '--spi', help='Enable SPI')
 parser.add_argument('-r', '--ir', help='Enable IR')
@@ -16,15 +16,6 @@ args = parser.parse_args()
 
 script_directory = os.path.dirname(os.path.abspath(__file__))
 OVERLAYS_DIR = os.path.join(script_directory, "../overlays")
-
-max_current_template='''{{
-        target = <&chosen>;
-        __overlay__ {{
-            power {{
-                max_current = <{value}>;
-            }};
-        }};
-    }};'''
 
 i2c_template='''{{
         target = <&i2c1>;
@@ -127,6 +118,15 @@ gpio_overrides = [
 ]
 
 
+hat_current_supply_template = '''{{
+        target-path = "/chosen";
+        __overlay__ {{
+            power: power {{
+                hat_current_supply = <{current}>;
+            }};
+        }};
+    }};'''
+
 content = '''/dts-v1/;
 /plugin/;
 
@@ -144,8 +144,8 @@ fragments = ""
 override_list = []
 fragment_count = 0
 
-if args.max_current:
-    node = max_current_template.format(value=args.max_current)
+if args.hat_current_supply:
+    node = hat_current_supply_template.format(current=args.hat_current_supply)
     fragments += fragment_template.format(count=fragment_count, node=node)
     fragment_count += 1
 if args.i2c:

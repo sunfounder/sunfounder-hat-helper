@@ -11,7 +11,7 @@ DEFAULT_VENDOR="SunFounder"
 DEFAULT_DT_BLOB=""
 DEFAULT_EEPROM_CUSTOM_DATA=""
 
-DEFAULT_DTO_MAX_CURRENT=0
+DEFAULT_DTO_HAT_CURRENT_SUPPLY=0
 DEFAULT_I2C_ENABLE="-"
 DEFAULT_SPI_ENABLE="-"
 DEFAULT_IR_ENABLE="-"
@@ -42,7 +42,7 @@ check_config "product_name" "$DEFAULT_PRODUCT_NAME"
 check_config "vendor" "$DEFAULT_VENDOR"
 check_config "dt_blob" "$DEFAULT_DT_BLOB"
 check_config "eeprom_custom_data" "$DEFAULT_EEPROM_CUSTOM_DATA"
-check_config "dto_max_current" "$DEFAULT_DTO_MAX_CURRENT"
+check_config "dto_hat_current_supply" "$DEFAULT_DTO_HAT_CURRENT_SUPPLY"
 check_config "dto_i2c_enable" "$DEFAULT_I2C_ENABLE"
 check_config "dto_spi_enable" "$DEFAULT_SPI_ENABLE"
 check_config "dto_ir_enable" "$DEFAULT_IR_ENABLE"
@@ -74,9 +74,9 @@ CHIP_ADDRESS["53"]="Power HAT Mode 1"
 create_dtoverlay() {
     while true; do
 
-        local max_current="未设置"
-        if [ "$dto_max_current" -ne 0 ]; then
-            max_current="$dto_max_current mA"
+        local hat_current_supply="未设置"
+        if [ "$dto_hat_current_supply" -ne 0 ]; then
+            hat_current_supply="$dto_hat_current_supply mA"
         fi
         local i2c_enable="未设置"
         if [ "$dto_i2c_enable" == "1" ]; then
@@ -114,7 +114,7 @@ create_dtoverlay() {
             "<" "返回"
             "1" "产品名称: $product_name"
             "2" "公司名称: $vendor"
-            "3" "最大电流: $max_current"
+            "3" "HAT+供电电流: $hat_current_supply"
             "4" "I2C: $i2c_enable"
             "5" "SPI: $spi_enable"
             "6" "IR: $ir"
@@ -142,12 +142,12 @@ create_dtoverlay() {
                     sed -i "/^vendor=/c\vendor=\"$vendor\"" "$CONFIG_FILE"
                 fi
             ;;
-            "3") # 最大电流
-                result=$(whiptail --title "最大电流" --inputbox "请输入设备的最大电流(mA) 0表示不设置:" 10 60 "$dto_max_current" 3>&1 1>&2 2>&3)
+            "3") # HAT+供电电流
+                result=$(whiptail --title "HAT+供电电流" --inputbox "请输入HAT+的供电电流(mA) 0表示不设置:" 10 60 "$dto_hat_current_supply" 3>&1 1>&2 2>&3)
                 echo "result: $result"
                 if [ -n "$result" ]; then
-                    dto_max_current=$result
-                    sed -i "/^dto_max_current=/c\dto_max_current=$dto_max_current" "$CONFIG_FILE"
+                    dto_hat_current_supply=$result
+                    sed -i "/^dto_hat_current_supply=/c\dto_hat_current_supply=$dto_hat_current_supply" "$CONFIG_FILE"
                 fi
             ;;
             "4") # I2C
@@ -245,9 +245,9 @@ create_dtoverlay() {
                 sed -i "/^dt_blob=/c\dt_blob=\"$dt_blob\"" "$CONFIG_FILE"
                 local msg="生成dtoverlay: $name\n\n"
                 local command="python3 scripts/create_dtoverlay.py -f --name $name"
-                if [ "$dto_max_current" -ne 0 ]; then
-                    msg+="设置最大电流: $dto_max_current mA, "
-                    command+=" --max-current $dto_max_current"
+                if [ "$dto_hat_current_supply" -ne 0 ]; then
+                    msg+="设置最大电流: $dto_hat_current_supply mA, "
+                    command+=" --hat-current-supply $dto_hat_current_supply"
                 fi
                 if [ "$dto_i2c_enable" != "-" ]; then
                     msg+="开启I2C, "

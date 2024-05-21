@@ -1,6 +1,7 @@
 
 import struct, os
 
+hat_current_supply = None
 max_current = None
 product = None
 product_id = None
@@ -21,6 +22,14 @@ for file in os.listdir('/proc/device-tree/'):
 else:
     print("Hat is not detected")
     exit(1)
+hat_current_supply_path="/proc/device-tree/chosen/power/hat_current_supply"
+if not os.path.exists(hat_current_supply_path):
+    print("Hat Current Supply is not set")
+else:
+    with open(hat_current_supply_path, "rb") as f:
+        hat_current_supply = f.read()
+        hat_current_supply = struct.unpack(">I", hat_current_supply)[0]
+        print(f"Hat Current Supply: {hat_current_supply}mA")
 
 if not os.path.exists("/proc/device-tree/chosen/power/max_current"):
     print("Max Current is not set")
@@ -28,7 +37,7 @@ else:
     with open("/proc/device-tree/chosen/power/max_current", "rb") as f:
         max_current = f.read()
         max_current = struct.unpack(">I", max_current)[0]
-        print(f"Max Current: {max_current}")
+        print(f"Max Current: {max_current}mA")
 
 with open(f"{hat_path}/product", "r") as f:
     product = f.read()
