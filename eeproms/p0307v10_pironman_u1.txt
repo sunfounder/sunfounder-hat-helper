@@ -3,4 +3,4 @@ product_id 0x0133
 product_ver 0x000a
 vendor "SunFounder"
 product "Pironman U1"
-dt_blob "sunfounder-pironmanu1.dtbo"
+dt_blob "sunfounder-pironman-u1.dtbo"
