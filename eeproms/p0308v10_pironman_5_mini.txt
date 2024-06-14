@@ -2,5 +2,5 @@ product_uuid 9daeea78-0000-0134-000a-582369ac3e02
 product_id 0x0134
 product_ver 0x000a
 vendor "SunFounder"
-product "Pironman Mini"
-dt_blob "sunfounder-pironmanmini.dtbo"
+product "Pironman 5 Mini"
+dt_blob "sunfounder-pironman5mini.dtbo"
