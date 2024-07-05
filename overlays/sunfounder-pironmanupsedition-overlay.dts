@@ -5,13 +5,15 @@
 	compatible = "brcm,bcm2835";
 
 	fragment@0 {
-		target = <&i2c1>;
+		target-path = "/chosen";
 		__overlay__ {
-			status = "okay";
+			power: power {
+				hat_current_supply = <5000>;
+			};
 		};
 	};
 	fragment@1 {
-		target = <&spi0>;
+		target = <&i2c1>;
 		__overlay__ {
 			status = "okay";
 		};
@@ -46,10 +48,9 @@
 	};
 	__overrides__ {
 		ir = <&gpio_ir>,"status";
-		ir_pins =
-			<&gpio_ir>,"gpios:4",
-			<&gpio_ir>,"reg:0",
-			<&gpio_ir_pins>,"brcm,pins:0",
-			<&gpio_ir_pins>,"reg:0";
+		ir_pins =	<&gpio_ir>,"gpios:4",
+					<&gpio_ir>,"reg:0",
+					<&gpio_ir_pins>,"brcm,pins:0",
+					<&gpio_ir_pins>,"reg:0";
 	};
 };

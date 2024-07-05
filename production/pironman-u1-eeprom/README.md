@@ -1,1 +1,0 @@
-sudo bash ./eepflash.sh -y -w -f=p0307v10_pironman_u1.eep -t=24c64 -a=52 -d=1

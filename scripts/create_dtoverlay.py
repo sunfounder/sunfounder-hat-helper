@@ -18,52 +18,55 @@ script_directory = os.path.dirname(os.path.abspath(__file__))
 OVERLAYS_DIR = os.path.join(script_directory, "../overlays")
 
 i2c_template='''{{
-        target = <&i2c1>;
-        __overlay__ {{
-            status = "{status}";
-        }};
-    }};'''
+		target = <&i2c1>;
+		__overlay__ {{
+			status = "{status}";
+		}};
+	}};'''
 
 spi_template='''{{
-        target = <&spi0>;
-        __overlay__ {{
-            status = "{status}";
-        }};
-    }};'''
+		target = <&spi0>;
+		__overlay__ {{
+			status = "{status}";
+		}};
+	}};'''
 
 ir_template_1 = '''{{
-        target-path = "/";
-        __overlay__ {{
-            gpio_ir: ir-receiver@{pin:x} {{
-                compatible = "gpio-ir-receiver";
-                pinctrl-names = "default";
-                pinctrl-0 = <&gpio_ir_pins>;
+		target-path = "/";
+		__overlay__ {{
+			gpio_ir: ir-receiver@{pin:x} {{
+				compatible = "gpio-ir-receiver";
+				pinctrl-names = "default";
+				pinctrl-0 = <&gpio_ir_pins>;
 
-                // pin number, high or low
-                gpios = <&gpio {pin} 1>;
+				// pin number, high or low
+				gpios = <&gpio {pin} 1>;
 
-                // parameter for keymap name
-                linux,rc-map-name = "rc-rc6-mce";
+				// parameter for keymap name
+				linux,rc-map-name = "rc-rc6-mce";
 
-                status = "okay";
-            }};
-        }};
-    }};'''
+				status = "okay";
+			}};
+		}};
+	}};'''
 
 ir_template_2 = '''{{
-        target = <&gpio>;
-        __overlay__ {{
-            gpio_ir_pins: gpio_ir_pins@{pin:x} {{
-                brcm,pins = <{pin}>;
-                brcm,function = <0>;
-                brcm,pull = <2>;
-            }};
-        }};
-    }};'''
+		target = <&gpio>;
+		__overlay__ {{
+			gpio_ir_pins: gpio_ir_pins@{pin:x} {{
+				brcm,pins = <{pin}>;
+				brcm,function = <0>;
+				brcm,pull = <2>;
+			}};
+		}};
+	}};'''
 
 ir_overrides = [
-    'ir = <&gpio_ir>,"status";',
-    'ir_pins = <&gpio_ir>,"gpios:4", <&gpio_ir>,"reg:0", <&gpio_ir_pins>,"brcm,pins:0", <&gpio_ir_pins>,"reg:0";',
+	'ir = <&gpio_ir>,"status";',
+	'ir_pins =	<&gpio_ir>,"gpios:4",',
+	'			<&gpio_ir>,"reg:0",',
+	'			<&gpio_ir_pins>,"brcm,pins:0",',
+	'			<&gpio_ir_pins>,"reg:0";',
 ]
 
 i2s_template_1 = '''{{
@@ -111,34 +114,35 @@ gpio_poweroff_template_2 = '''{{
 				brcm,function = <1>; // out
 			}};
 		}};
-    }};'''
+	}};'''
 
 gpio_overrides = [
-    'poweroff_pin = <&power_ctrl>,"gpios:4",<&power_ctrl_pins>,"brcm,pins:0";',
+	'poweroff_pin =	<&power_ctrl>,"gpios:4",',
+    '				<&power_ctrl_pins>,"brcm,pins:0";',
 ]
 
 
 hat_current_supply_template = '''{{
-        target-path = "/chosen";
-        __overlay__ {{
-            power: power {{
-                hat_current_supply = <{current}>;
-            }};
-        }};
-    }};'''
+		target-path = "/chosen";
+		__overlay__ {{
+			power: power {{
+				hat_current_supply = <{current}>;
+			}};
+		}};
+	}};'''
 
 content = '''/dts-v1/;
 /plugin/;
 
 / {{
-    compatible = "brcm,bcm2835";
+	compatible = "brcm,bcm2835";
 {fragments}
 {overrides}
 }};
 '''
 
 fragment_template = '''
-    fragment@{count} {node}'''
+	fragment@{count} {node}'''
 
 fragments = ""
 override_list = []
@@ -188,10 +192,10 @@ if args.gpio_poweroff:
 
 overrides = ""
 if len(override_list) > 0:
-    overrides = "    __overrides__ {\n"
+    overrides = "	__overrides__ {\n"
     for override in override_list:
-        overrides += f"        {override}\n"
-    overrides += "    };"
+        overrides += f"		{override}\n"
+    overrides += "	};"
 
 content = content.format(fragments=fragments, overrides=overrides)
 
