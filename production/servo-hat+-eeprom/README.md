@@ -1,0 +1,1 @@
+sudo bash ./eepflash.sh -y -w -f=o1906v10_servo_hat+ -t=24c64 -a=50 -d=1

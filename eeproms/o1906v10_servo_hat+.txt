@@ -1,0 +1,6 @@
+product_uuid 9daeea78-0000-0772-000a-582369ac3e02
+product_id 0x0772
+product_ver 0x000a
+vendor "SunFounder"
+product "Servo Hat+"
+dt_blob "sunfounder-servohat+.dtbo"

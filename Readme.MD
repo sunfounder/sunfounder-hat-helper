@@ -1,5 +1,17 @@
 # SunFounder HAT+ helper
 
+## helper.sh
+
+Helper script to automate the process of creating eeprom files and device tree overlays.
+
+### Usage:
+
+```
+bash helper.sh
+```
+
+follow the instructions to create eeprom files and device tree overlays. Once the files are created, they will be under the `eeproms` and `overlays` folders. with their name.
+
 ## EEPROM:
 
 Create a eeprom file for a product
