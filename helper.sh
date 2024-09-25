@@ -480,9 +480,7 @@ burn_eeprom() {
                         else
                             whiptail --title "烧录失败" --msgbox "烧录失败: \n$result" 15 78
                         fi
-                        break
                     fi
-                    break
                 fi
             ;;
             *)
