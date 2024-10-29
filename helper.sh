@@ -18,6 +18,7 @@ DEFAULT_IR_ENABLE="-"
 DEFAULT_IR_PIN=0
 DEFAULT_I2S_DAC_ENABLE="-"
 DEFAULT_GPIO_POWEROFF=0
+DEFAULT_HAT_MODE_CURRENT=0
 
 # 检查是否存在配置文件
 if [ -f "$CONFIG_FILE" ]; then
@@ -49,6 +50,7 @@ check_config "dto_ir_enable" "$DEFAULT_IR_ENABLE"
 check_config "dto_ir_pin" "$DEFAULT_IR_PIN"
 check_config "dto_i2s_dac_enable" "$DEFAULT_I2S_DAC_ENABLE"
 check_config "dto_gpio_poweroff" "$DEFAULT_GPIO_POWEROFF"
+check_config "dto_hat_mode_current" "$DEFAULT_HAT_MODE_CURRENT"
 
 CHIP_TYPES=(
     "24c32"
@@ -110,19 +112,24 @@ create_dtoverlay() {
         if [ "$dto_gpio_poweroff" -ne 0 ]; then
             gpio_power_off="GPIO$dto_gpio_poweroff"
         fi
+        local hat_mode_current="未开启"
+        if [ "$dto_hat_mode_current" -ne 0 ]; then
+            hat_mode_current="开启"
+        fi
         local options=(
             "<" "返回"
             "1" "产品名称: $product_name"
             "2" "公司名称: $vendor"
             "3" "HAT+供电电流: $hat_current_supply"
-            "4" "I2C: $i2c_enable"
-            "5" "SPI: $spi_enable"
-            "6" "IR: $ir"
-            "7" "I2S DAC: $i2s_dac_enable"
-            "8" "GPIO Power Off: $gpio_power_off"
+            "4" "根据模式切换供电电流: $hat_mode_current"
+            "5" "I2C: $i2c_enable"
+            "6" "SPI: $spi_enable"
+            "7" "IR: $ir"
+            "8" "I2S DAC: $i2s_dac_enable"
+            "9" "GPIO Power Off: $gpio_power_off"
             "=" "生成 DT Overlay"
         )
-        select=$(whiptail --title "创建 DT Overlay" --menu "" 15 78 8 "${options[@]}" 3>&1 1>&2 2>&3)
+        select=$(whiptail --title "创建 DT Overlay" --menu "" 20 80 12 "${options[@]}" --yes-button "选择" --no-button "退出" 3>&1 1>&2 2>&3)
 
         case $select in
             "<") # 返回
@@ -150,7 +157,16 @@ create_dtoverlay() {
                     sed -i "/^dto_hat_current_supply=/c\dto_hat_current_supply=$dto_hat_current_supply" "$CONFIG_FILE"
                 fi
             ;;
-            "4") # I2C
+            "4") # 模式切换供电电流
+                result=$(whiptail --title "根据模式切换供电电流" --yesno "模式切换供电电流设置，开启后:\n\n    模式0：设置Hat 供电电流为3000mA\n    模式1：设置Hat 供电电流为5000mA。\n\n请选择是否开启:" --yes-button "开启" --no-button "关闭" 11 60 3>&1 1>&2 2>&3)
+                if [ $? -eq 0 ]; then
+                    dto_hat_mode_current=1
+                else
+                    dto_hat_mode_current=0
+                fi
+                sed -i "/^dto_hat_mode_current=/c\dto_hat_mode_current=$dto_hat_mode_current" "$CONFIG_FILE"
+            ;;
+            "5") # I2C
                 local options=()
                 for ((i=0; i<${#ENABLE_TYPE[@]}; i+=2)); do
                     j=$((i+1))
@@ -167,7 +183,7 @@ create_dtoverlay() {
                     sed -i "/^dto_i2c_enable=/c\dto_i2c_enable=$dto_i2c_enable" "$CONFIG_FILE"
                 fi
             ;;
-            "5") # SPI
+            "6") # SPI
                 local options=()
                 for ((i=0; i<${#ENABLE_TYPE[@]}; i+=2)); do
                     j=$((i+1))
@@ -184,7 +200,7 @@ create_dtoverlay() {
                     sed -i "/^dto_spi_enable=/c\dto_spi_enable=$dto_spi_enable" "$CONFIG_FILE"
                 fi
             ;;
-            "6") # IR
+            "7") # IR
                 local options=()
                 for ((i=0; i<${#ENABLE_TYPE[@]}; i+=2)); do
                     j=$((i+1))
@@ -208,7 +224,7 @@ create_dtoverlay() {
                     fi
                 fi
             ;;
-            "7") # I2S DAC
+            "8") # I2S DAC
                 local options=()
                 for ((i=0; i<${#ENABLE_TYPE[@]}; i+=2)); do
                     j=$((i+1))
@@ -225,7 +241,7 @@ create_dtoverlay() {
                     sed -i "/^dto_i2s_dac_enable=/c\dto_i2s_dac_enable=$dto_i2s_dac_enable" "$CONFIG_FILE"
                 fi
             ;;
-            "8") # GPIO Power Off
+            "9") # GPIO Power Off
                 result=$(whiptail --title "GPIO Power Off" --inputbox "GPIO Power off 设置，会在树莓派关机后，把一个GPIO引脚拉高。请输入GPIO引脚(0表示未设置):" 10 60 "$dto_gpio_poweroff" 3>&1 1>&2 2>&3)
                 if [ -n "$result" ]; then
                     dto_gpio_poweroff=$result
@@ -246,29 +262,33 @@ create_dtoverlay() {
                 local msg="生成dtoverlay: $name\n\n"
                 local command="python3 scripts/create_dtoverlay.py -f --name $name"
                 if [ "$dto_hat_current_supply" -ne 0 ]; then
-                    msg+="设置最大电流: $dto_hat_current_supply mA, "
+                    msg+="   - 设置最大电流: $dto_hat_current_supply mA"
                     command+=" --hat-current-supply $dto_hat_current_supply"
                 fi
+                if [ "$dto_hat_mode_current" -eq 1 ]; then
+                    msg+="   - 开启根据模式切换供电电流"
+                    command+=" --hat-mode-current"
+                fi
                 if [ "$dto_i2c_enable" != "-" ]; then
-                    msg+="开启I2C, "
+                    msg+="   - 开启I2C"
                     command+=" --i2c $dto_i2c_enable"
                 fi
                 if [ "$dto_spi_enable" != "-" ]; then
-                    msg+="开启SPI, "
+                    msg+="   - 开启SPI"
                     command+=" --spi $dto_spi_enable"
                 fi
                 if [ "$dto_ir_enable" != "-" ]; then
                     if [ "$dto_ir_enable" -eq 1 ]; then
-                        msg+="开启IR GPIO$dto_ir_pin, "
+                        msg+="   - 开启IR GPIO$dto_ir_pin"
                         command+=" --ir $dto_ir_enable --ir-gpio $dto_ir_pin"
                     fi
                 fi
                 if [ "$dto_i2s_dac_enable" != "-" ]; then
-                    msg+="开启I2S DAC, "
+                    msg+="   - 开启I2S DAC"
                     command+=" --i2s-dac $dto_i2s_dac_enable"
                 fi
                 if [ "$dto_gpio_poweroff" -ne 0 ]; then
-                    msg+="设置GPIO Power-Off GPIO$dto_gpio_poweroff, "
+                    msg+="   - 设置GPIO Power-Off GPIO$dto_gpio_poweroff"
                     command+=" --gpio-poweroff $dto_gpio_poweroff"
                 fi
                 msg+="\n\n生成命令: $command\n"

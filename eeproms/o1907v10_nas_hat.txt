@@ -1,0 +1,6 @@
+product_uuid 9daeea78-0000-0773-000a-582369ac3e02
+product_id 0x0773
+product_ver 0x000a
+vendor "SunFounder"
+product "NAS HAT"
+dt_blob "sunfounder-nashat.dtbo"

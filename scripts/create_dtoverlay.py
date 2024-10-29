@@ -11,6 +11,7 @@ parser.add_argument('-r', '--ir', help='Enable IR')
 parser.add_argument('-g', '--ir-gpio', help='GPIO pin for IR')
 parser.add_argument('-d', '--i2s-dac', help='Enable I2S DAC')
 parser.add_argument('-p', '--gpio-poweroff', help='Enable GPIO poweroff')
+parser.add_argument('-m', '--hat-mode-current', action='store_true', help='Enable Hat mode change current')
 parser.add_argument('-f', '--force', action='store_true', help='Force overwrite')
 args = parser.parse_args()
 
@@ -131,6 +132,11 @@ hat_current_supply_template = '''{{
 		}};
 	}};'''
 
+hat_mode_curent_overrides = [
+    'mode0 = <&power>, "hat_current_supply:0=3000";',
+    'mode1 = <&power>, "hat_current_supply:0=5000";'
+]
+
 content = '''/dts-v1/;
 /plugin/;
 
@@ -189,6 +195,8 @@ if args.gpio_poweroff:
     fragments += fragment_template.format(count=fragment_count, node=node2)
     fragment_count += 1
     override_list += gpio_overrides
+if args.hat_mode_current:
+    override_list += hat_mode_curent_overrides
 
 overrides = ""
 if len(override_list) > 0:
