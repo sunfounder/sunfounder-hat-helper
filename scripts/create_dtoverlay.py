@@ -9,7 +9,8 @@ parser.add_argument('-i', '--i2c', help='Enable I2C')
 parser.add_argument('-s', '--spi', help='Enable SPI')
 parser.add_argument('-r', '--ir', help='Enable IR')
 parser.add_argument('-g', '--ir-gpio', help='GPIO pin for IR')
-parser.add_argument('-d', '--i2s-dac', help='Enable I2S DAC')
+parser.add_argument('-d', '--i2s-speaker', help='Enable I2S Speaker')
+parser.add_argument('-G', '--i2s-speaker-mic', help='Enable I2S Speaker and microphone')
 parser.add_argument('-p', '--gpio-poweroff', help='Enable GPIO poweroff')
 parser.add_argument('-m', '--hat-mode-current', action='store_true', help='Enable Hat mode change current')
 parser.add_argument('-f', '--force', action='store_true', help='Force overwrite')
@@ -70,14 +71,14 @@ ir_overrides = [
 	'			<&gpio_ir_pins>,"reg:0";',
 ]
 
-i2s_template_1 = '''{{
+i2s_speaker_template_1 = '''{{
 		target = <&i2s_clk_producer>;
 		__overlay__ {{
 			status = "{status}";
 		}};
 	}};'''
 
-i2s_template_2 = '''{{
+i2s_speaker_template_2 = '''{{
 		target-path = "/";
 		__overlay__ {{
 			pcm5102a-codec {{
@@ -87,7 +88,7 @@ i2s_template_2 = '''{{
 		}};
 	}};'''
 
-i2s_template_3 = '''{{
+i2s_speaker_template_3 = '''{{
 		target = <&sound>;
 		__overlay__ {{
 			compatible = "hifiberry,hifiberry-dac";
@@ -137,6 +138,44 @@ hat_mode_curent_overrides = [
     'mode1 = <&power>, "hat_current_supply:0=5000";'
 ]
 
+i2s_speaker_mic_template1 = '''{{
+		target = <&i2s_clk_producer>;
+		__overlay__ {{
+			status = "{status}";
+		}};
+	}};'''
+i2s_speaker_mic_template2 = '''{
+		target = <&gpio>;
+		__overlay__ {
+			googlevoicehat_pins: googlevoicehat_pins {
+				brcm,pins = <16>;
+				brcm,function = <1>; /* out */
+				brcm,pull = <0>; /* up */
+			};
+		};
+	};'''
+i2s_speaker_mic_template3 = '''{{
+		target-path = "/";
+		__overlay__ {{
+			voicehat-codec {{
+				#sound-dai-cells = <0>;
+				compatible = "google,voicehat";
+				pinctrl-names = "default";
+				pinctrl-0 = <&googlevoicehat_pins>;
+				sdmode-gpios= <&gpio 16 0>;
+				status = "{status}";
+			}};
+		}};
+	}};'''
+i2s_speaker_mic_template4 = '''{{
+		target = <&sound>;
+		__overlay__ {{
+			compatible = "googlevoicehat,googlevoicehat-soundcard";
+			i2s-controller = <&i2s_clk_producer>;
+			status = "{status}";
+		}};
+	}};'''
+
 content = '''/dts-v1/;
 /plugin/;
 
@@ -176,11 +215,11 @@ if args.ir:
     fragments += fragment_template.format(count=fragment_count, node=node2)
     fragment_count += 1
     override_list += ir_overrides
-if args.i2s_dac:
-    status = "okay" if args.i2s_dac == "1" else "disabled"
-    node1 = i2s_template_1.format(status=status)
-    node2 = i2s_template_2.format(status=status)
-    node3 = i2s_template_3.format(status=status)
+if args.i2s_speaker:
+    status = "okay" if args.i2s_speaker == "1" else "disabled"
+    node1 = i2s_speaker_template_1.format(status=status)
+    node2 = i2s_speaker_template_2.format(status=status)
+    node3 = i2s_speaker_template_3.format(status=status)
     fragments += fragment_template.format(count=fragment_count, node=node1)
     fragment_count += 1
     fragments += fragment_template.format(count=fragment_count, node=node2)
@@ -197,6 +236,20 @@ if args.gpio_poweroff:
     override_list += gpio_overrides
 if args.hat_mode_current:
     override_list += hat_mode_curent_overrides
+if args.i2s_speaker_mic:
+    status = "okay" if args.i2s_speaker_mic == "1" else "disabled"
+    node1 = i2s_speaker_mic_template1.format(status=status)
+    node2 = i2s_speaker_mic_template2
+    node3 = i2s_speaker_mic_template3.format(status=status)
+    node4 = i2s_speaker_mic_template4.format(status=status)
+    fragments += fragment_template.format(count=fragment_count, node=node1)
+    fragment_count += 1
+    fragments += fragment_template.format(count=fragment_count, node=node2)
+    fragment_count += 1
+    fragments += fragment_template.format(count=fragment_count, node=node3)
+    fragment_count += 1
+    fragments += fragment_template.format(count=fragment_count, node=node4)
+    fragment_count += 1
 
 overrides = ""
 if len(override_list) > 0:
