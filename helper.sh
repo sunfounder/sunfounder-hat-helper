@@ -16,9 +16,10 @@ DEFAULT_I2C_ENABLE="-"
 DEFAULT_SPI_ENABLE="-"
 DEFAULT_IR_ENABLE="-"
 DEFAULT_IR_PIN=0
-DEFAULT_I2S_DAC_ENABLE="-"
+DEFAULT_I2S_SPEAKER_ENABLE="-"
 DEFAULT_GPIO_POWEROFF=0
 DEFAULT_HAT_MODE_CURRENT=0
+DEFAULT_I2S_MIC_SPEAKER_ENABLE="-"
 
 # 检查是否存在配置文件
 if [ -f "$CONFIG_FILE" ]; then
@@ -48,9 +49,10 @@ check_config "dto_i2c_enable" "$DEFAULT_I2C_ENABLE"
 check_config "dto_spi_enable" "$DEFAULT_SPI_ENABLE"
 check_config "dto_ir_enable" "$DEFAULT_IR_ENABLE"
 check_config "dto_ir_pin" "$DEFAULT_IR_PIN"
-check_config "dto_i2s_dac_enable" "$DEFAULT_I2S_DAC_ENABLE"
+check_config "dto_i2s_speaker_enable" "$DEFAULT_I2S_SPEAKER_ENABLE"
 check_config "dto_gpio_poweroff" "$DEFAULT_GPIO_POWEROFF"
 check_config "dto_hat_mode_current" "$DEFAULT_HAT_MODE_CURRENT"
+check_config "dto_i2s_speaker_mic_enable" "$DEFAULT_I2S_MIC_SPEAKER_ENABLE"
 
 CHIP_TYPES=(
     "24c32"
@@ -102,11 +104,11 @@ create_dtoverlay() {
         elif [ "$dto_ir_enable" == "0" ]; then
             ir="关闭"
         fi
-        local i2s_dac_enable="未设置"
-        if [ "$dto_i2s_dac_enable" == "1" ]; then
-            i2s_dac_enable="开启"
-        elif [ "$dto_i2s_dac_enable" == "0" ]; then
-            i2s_dac_enable="关闭"
+        local i2s_speaker_enable="未设置"
+        if [ "$dto_i2s_speaker_enable" == "1" ]; then
+            i2s_speaker_enable="开启"
+        elif [ "$dto_i2s_speaker_enable" == "0" ]; then
+            i2s_speaker_enable="关闭"
         fi
         local gpio_power_off="引脚未设置"
         if [ "$dto_gpio_poweroff" -ne 0 ]; then
@@ -116,6 +118,14 @@ create_dtoverlay() {
         if [ "$dto_hat_mode_current" -ne 0 ]; then
             hat_mode_current="开启"
         fi
+        local i2s_speaker_mic_enable="未设置"
+        if [ "$dto_i2s_speaker_mic_enable" == "1" ]; then
+            i2s_speaker_mic_enable="开启"
+        elif [ "$dto_i2s_speaker_mic_enable" == "0" ]; then
+            i2s_speaker_mic_enable="关闭"
+        fi
+
+
         local options=(
             "<" "返回"
             "1" "产品名称: $product_name"
@@ -125,8 +135,9 @@ create_dtoverlay() {
             "5" "I2C: $i2c_enable"
             "6" "SPI: $spi_enable"
             "7" "IR: $ir"
-            "8" "I2S DAC: $i2s_dac_enable"
+            "8" "I2S 喇叭: $i2s_speaker_enable"
             "9" "GPIO Power Off: $gpio_power_off"
+            "10" "I2S 喇叭麦克风: $i2s_speaker_mic_enable"
             "=" "生成 DT Overlay"
         )
         select=$(whiptail --title "创建 DT Overlay" --menu "" 20 80 12 "${options[@]}" --yes-button "选择" --no-button "退出" 3>&1 1>&2 2>&3)
@@ -228,17 +239,17 @@ create_dtoverlay() {
                 local options=()
                 for ((i=0; i<${#ENABLE_TYPE[@]}; i+=2)); do
                     j=$((i+1))
-                    if [ "${ENABLE_TYPE[$i]}" == "$dto_i2s_dac_enable" ]; then
+                    if [ "${ENABLE_TYPE[$i]}" == "$dto_i2s_speaker_enable" ]; then
                         options+=("${ENABLE_TYPE[$i]}" "${ENABLE_TYPE[$j]}(*)")
                     else
                         options+=("${ENABLE_TYPE[$i]}" "${ENABLE_TYPE[$j]}")
                     fi
                 done
 
-                local result=$(whiptail --title "I2C" --menu "选择是否开启I2S DAC:" 15 78 7 ${options[@]} 3>&1 1>&2 2>&3)
+                local result=$(whiptail --title "I2C" --menu "选择是否开启I2S喇叭:" 15 78 7 ${options[@]} 3>&1 1>&2 2>&3)
                 if [ -n "$result" ]; then
-                    dto_i2s_dac_enable=$result
-                    sed -i "/^dto_i2s_dac_enable=/c\dto_i2s_dac_enable=$dto_i2s_dac_enable" "$CONFIG_FILE"
+                    dto_i2s_speaker_enable=$result
+                    sed -i "/^dto_i2s_speaker_enable=/c\dto_i2s_speaker_enable=$dto_i2s_speaker_enable" "$CONFIG_FILE"
                 fi
             ;;
             "9") # GPIO Power Off
@@ -247,6 +258,15 @@ create_dtoverlay() {
                     dto_gpio_poweroff=$result
                     sed -i "/^dto_gpio_poweroff=/c\dto_gpio_poweroff=$dto_gpio_poweroff" "$CONFIG_FILE"
                 fi
+            ;;
+            "10") # 引入 DT Overlay
+                result=$(whiptail --title "I2S喇叭麦克风" --yesno "是否开启I2S喇叭麦克风？" --yes-button "开启" --no-button "关闭" 11 60 3>&1 1>&2 2>&3)
+                if [ $? -eq 0 ]; then
+                    dto_i2s_speaker_mic_enable=1
+                else
+                    dto_i2s_speaker_mic_enable=0
+                fi
+                sed -i "/^dto_i2s_speaker_mic_enable=/c\dto_i2s_speaker_mic_enable=$dto_i2s_speaker_mic_enable" "$CONFIG_FILE"
             ;;
             "=") # 生成 DT Overlay
                 if [ -z "$product_name" ] || [ -z "$vendor" ]; then
@@ -262,34 +282,38 @@ create_dtoverlay() {
                 local msg="生成dtoverlay: $name\n\n"
                 local command="python3 scripts/create_dtoverlay.py -f --name $name"
                 if [ "$dto_hat_current_supply" -ne 0 ]; then
-                    msg+="   - 设置最大电流: $dto_hat_current_supply mA"
+                    msg+="   - 设置最大电流: $dto_hat_current_supply mA\n"
                     command+=" --hat-current-supply $dto_hat_current_supply"
                 fi
                 if [ "$dto_hat_mode_current" -eq 1 ]; then
-                    msg+="   - 开启根据模式切换供电电流"
+                    msg+="   - 开启根据模式切换供电电流\n"
                     command+=" --hat-mode-current"
                 fi
                 if [ "$dto_i2c_enable" != "-" ]; then
-                    msg+="   - 开启I2C"
+                    msg+="   - 开启I2C\n"
                     command+=" --i2c $dto_i2c_enable"
                 fi
                 if [ "$dto_spi_enable" != "-" ]; then
-                    msg+="   - 开启SPI"
+                    msg+="   - 开启SPI\n"
                     command+=" --spi $dto_spi_enable"
                 fi
                 if [ "$dto_ir_enable" != "-" ]; then
                     if [ "$dto_ir_enable" -eq 1 ]; then
-                        msg+="   - 开启IR GPIO$dto_ir_pin"
+                        msg+="   - 开启IR GPIO$dto_ir_pin\n"
                         command+=" --ir $dto_ir_enable --ir-gpio $dto_ir_pin"
                     fi
                 fi
-                if [ "$dto_i2s_dac_enable" != "-" ]; then
-                    msg+="   - 开启I2S DAC"
-                    command+=" --i2s-dac $dto_i2s_dac_enable"
+                if [ "$dto_i2s_speaker_enable" != "-" ]; then
+                    msg+="   - 开启I2S 喇叭\n"
+                    command+=" --i2s-speaker $dto_i2s_speaker_enable"
                 fi
                 if [ "$dto_gpio_poweroff" -ne 0 ]; then
-                    msg+="   - 设置GPIO Power-Off GPIO$dto_gpio_poweroff"
+                    msg+="   - 设置GPIO Power-Off GPIO$dto_gpio_poweroff\n"
                     command+=" --gpio-poweroff $dto_gpio_poweroff"
+                fi
+                if [ "$dto_i2s_speaker_mic_enable" -eq 1 ]; then
+                    msg+="   - 开启I2S 喇叭麦克风\n"
+                    command+=" --i2s-speaker-mic $dto_i2s_speaker_mic_enable"
                 fi
                 msg+="\n\n生成命令: $command\n"
                 msg+="是否生成 DT Overlay?"
@@ -331,7 +355,6 @@ create_eeprom() {
             ;;
             "1") # PCB 编码
                 result=$(whiptail --title "产品编号" --inputbox "产品格式为P<流水号>V<版本号>:" 10 60 "$eeprom_pcb_code" 3>&1 1>&2 2>&3)
-                echo "产品编号: $eeprom_pcb_code"
                 if [ -n "$result" ]; then
                     eeprom_pcb_code=$result
                     sed -i "/^eeprom_pcb_code=/c\eeprom_pcb_code=\"$eeprom_pcb_code\"" "$CONFIG_FILE"
@@ -480,6 +503,10 @@ burn_eeprom() {
                         fi
                     done
                 done < <(i2cdetect -y ${eeprom_i2c_bus#i2c-} | awk 'NR>1 {print substr($0, 4, 49)}' | tr -s ' ' '\n' | grep "^[0-9a-f][0-9a-f]$")
+                if [ -z "$address_items" ]; then
+                    whiptail --title "错误" --msgbox "没有找到可用的地址" 8 78
+                    continue
+                fi
 
                 eeprom_chip_address=$(whiptail --title "选择芯片地址" --menu "" 15 78 4 "${address_items[@]}" 3>&1 1>&2 2>&3)
                 if [ $? -eq 0 ]; then
