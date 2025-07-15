@@ -1,0 +1,1 @@
+sudo bash ./eepflash.sh -y -w -f=o2602v50_pipower_5.eep -t=24c64 -a=52 -d=1
