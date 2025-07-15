@@ -11,15 +11,17 @@ DEFAULT_VENDOR="SunFounder"
 DEFAULT_DT_BLOB=""
 DEFAULT_EEPROM_CUSTOM_DATA=""
 
+# 以下为默认值，根据实际情况修改
 DEFAULT_DTO_HAT_CURRENT_SUPPLY=0
 DEFAULT_I2C_ENABLE="-"
 DEFAULT_SPI_ENABLE="-"
 DEFAULT_IR_ENABLE="-"
 DEFAULT_IR_PIN=0
-DEFAULT_I2S_SPEAKER_ENABLE="-"
+DEFAULT_I2S_SPEAKER_ENABLE=0
 DEFAULT_GPIO_POWEROFF=0
 DEFAULT_HAT_MODE_CURRENT=0
-DEFAULT_I2S_MIC_SPEAKER_ENABLE="-"
+DEFAULT_I2S_MIC_SPEAKER_ENABLE=0
+DEFAULT_OTG_ENABLE=0
 
 # 检查是否存在配置文件
 if [ -f "$CONFIG_FILE" ]; then
@@ -53,6 +55,7 @@ check_config "dto_i2s_speaker_enable" "$DEFAULT_I2S_SPEAKER_ENABLE"
 check_config "dto_gpio_poweroff" "$DEFAULT_GPIO_POWEROFF"
 check_config "dto_hat_mode_current" "$DEFAULT_HAT_MODE_CURRENT"
 check_config "dto_i2s_speaker_mic_enable" "$DEFAULT_I2S_MIC_SPEAKER_ENABLE"
+check_config "dto_otg_enable" "$DEFAULT_OTG_ENABLE"
 
 CHIP_TYPES=(
     "24c32"
@@ -104,11 +107,9 @@ create_dtoverlay() {
         elif [ "$dto_ir_enable" == "0" ]; then
             ir="关闭"
         fi
-        local i2s_speaker_enable="未设置"
-        if [ "$dto_i2s_speaker_enable" == "1" ]; then
+        local i2s_speaker_enable="未开启"
+        if [ "$dto_i2s_speaker_enable" -ne 0 ]; then
             i2s_speaker_enable="开启"
-        elif [ "$dto_i2s_speaker_enable" == "0" ]; then
-            i2s_speaker_enable="关闭"
         fi
         local gpio_power_off="引脚未设置"
         if [ "$dto_gpio_poweroff" -ne 0 ]; then
@@ -118,14 +119,14 @@ create_dtoverlay() {
         if [ "$dto_hat_mode_current" -ne 0 ]; then
             hat_mode_current="开启"
         fi
-        local i2s_speaker_mic_enable="未设置"
-        if [ "$dto_i2s_speaker_mic_enable" == "1" ]; then
+        local i2s_speaker_mic_enable="未开启"
+        if [ "$dto_i2s_speaker_mic_enable" -ne 0 ]; then
             i2s_speaker_mic_enable="开启"
-        elif [ "$dto_i2s_speaker_mic_enable" == "0" ]; then
-            i2s_speaker_mic_enable="关闭"
         fi
-
-
+        local otg_enable="未开启"
+        if [ "$dto_otg_enable" -ne 0 ]; then
+            otg_enable="开启"
+        fi
         local options=(
             "<" "返回"
             "1" "产品名称: $product_name"
@@ -138,6 +139,7 @@ create_dtoverlay() {
             "8" "I2S 喇叭: $i2s_speaker_enable"
             "9" "GPIO Power Off: $gpio_power_off"
             "10" "I2S 喇叭麦克风: $i2s_speaker_mic_enable"
+            "11" "OTG: $otg_enable"
             "=" "生成 DT Overlay"
         )
         select=$(whiptail --title "创建 DT Overlay" --menu "" 20 80 12 "${options[@]}" --yes-button "选择" --no-button "退出" 3>&1 1>&2 2>&3)
@@ -259,14 +261,23 @@ create_dtoverlay() {
                     sed -i "/^dto_gpio_poweroff=/c\dto_gpio_poweroff=$dto_gpio_poweroff" "$CONFIG_FILE"
                 fi
             ;;
-            "10") # 引入 DT Overlay
-                result=$(whiptail --title "I2S喇叭麦克风" --yesno "是否开启I2S喇叭麦克风？" --yes-button "开启" --no-button "关闭" 11 60 3>&1 1>&2 2>&3)
+            "10") # I2S喇叭麦克风
+                result=$(whiptail --title "I2S喇叭麦克风" --yesno "是否开启I2S喇叭麦克风？" --yes-button "开启" --no-button "未开启" 11 60 3>&1 1>&2 2>&3)
                 if [ $? -eq 0 ]; then
                     dto_i2s_speaker_mic_enable=1
                 else
                     dto_i2s_speaker_mic_enable=0
                 fi
                 sed -i "/^dto_i2s_speaker_mic_enable=/c\dto_i2s_speaker_mic_enable=$dto_i2s_speaker_mic_enable" "$CONFIG_FILE"
+            ;;
+            "11") # OTG
+                result=$(whiptail --title "OTG" --yesno "是否开启OTG？" --yes-button "开启" --no-button "未开启" 11 60 3>&1 1>&2 2>&3)
+                if [ $? -eq 0 ]; then
+                    dto_otg_enable=1
+                else
+                    dto_otg_enable=0
+                fi
+                sed -i "/^dto_otg_enable=/c\dto_otg_enable=$dto_otg_enable" "$CONFIG_FILE"
             ;;
             "=") # 生成 DT Overlay
                 if [ -z "$product_name" ] || [ -z "$vendor" ]; then
@@ -303,9 +314,9 @@ create_dtoverlay() {
                         command+=" --ir $dto_ir_enable --ir-gpio $dto_ir_pin"
                     fi
                 fi
-                if [ "$dto_i2s_speaker_enable" != "-" ]; then
+                if [ "$dto_i2s_speaker_enable" -eq 1 ]; then
                     msg+="   - 开启I2S 喇叭\n"
-                    command+=" --i2s-speaker $dto_i2s_speaker_enable"
+                    command+=" --i2s-speaker"
                 fi
                 if [ "$dto_gpio_poweroff" -ne 0 ]; then
                     msg+="   - 设置GPIO Power-Off GPIO$dto_gpio_poweroff\n"
@@ -313,7 +324,11 @@ create_dtoverlay() {
                 fi
                 if [ "$dto_i2s_speaker_mic_enable" -eq 1 ]; then
                     msg+="   - 开启I2S 喇叭麦克风\n"
-                    command+=" --i2s-speaker-mic $dto_i2s_speaker_mic_enable"
+                    command+=" --i2s-speaker-mic"
+                fi
+                if [ "$dto_otg_enable" -eq 1 ]; then
+                    msg+="   - 开启OTG\n"
+                    command+=" --otg"
                 fi
                 msg+="\n\n生成命令: $command\n"
                 msg+="是否生成 DT Overlay?"

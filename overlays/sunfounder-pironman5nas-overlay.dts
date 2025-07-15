@@ -2,27 +2,32 @@
 /plugin/;
 
 / {
-	compatible = "brcm,bcm2835";
+    compatible = "brcm,bcm2835";
 
-	fragment@0 {
-		target-path = "/chosen";
-		__overlay__ {
-			power: power {
-				hat_current_supply = <5000>;
-			};
-		};
-	};
-	fragment@1 {
-		target = <&i2c1>;
-		__overlay__ {
-			status = "okay";
-		};
-	};
-	fragment@2 {
-		target = <&spi0>;
-		__overlay__ {
-			status = "okay";
-		};
-	};
+    fragment@0 {
+        target-path = "/chosen";
+        __overlay__ {
+            power: power {
+                hat_current_supply = <5000>;
+            };
+        };
+    };
+    fragment@1 {
+        target = <&i2c1>;
+        __overlay__ {
+            status = "okay";
+        };
+    };
+    fragment@2 {
+        target = <&usb>;
+        dwc2_usb: __overlay__ {
+            compatible = "brcm,bcm2835-usb";
+            dr_mode = "host";
+            g-np-tx-fifo-size = <32>;
+            g-rx-fifo-size = <558>;
+            g-tx-fifo-size = <512 512 512 512 512 256 256>;
+            status = "okay";
+        };
+    };
 
 };

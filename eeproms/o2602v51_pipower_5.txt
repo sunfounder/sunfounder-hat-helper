@@ -1,0 +1,6 @@
+product_uuid 9daeea78-0000-0a2a-0033-582369ac3e02
+product_id 0x0a2a
+product_ver 0x0033
+vendor "SunFounder"
+product "PiPower 5"
+dt_blob "sunfounder-pipower5.dtbo"
