@@ -15,6 +15,7 @@ DEFAULT_EEPROM_CUSTOM_DATA=""
 DEFAULT_DTO_HAT_CURRENT_SUPPLY=0
 DEFAULT_I2C_ENABLE="-"
 DEFAULT_SPI_ENABLE="-"
+DEFAULT_PWM_FAN_ENABLE="-"
 DEFAULT_IR_ENABLE="-"
 DEFAULT_IR_PIN=0
 DEFAULT_I2S_SPEAKER_ENABLE=0
@@ -46,9 +47,11 @@ check_config "product_name" "$DEFAULT_PRODUCT_NAME"
 check_config "vendor" "$DEFAULT_VENDOR"
 check_config "dt_blob" "$DEFAULT_DT_BLOB"
 check_config "eeprom_custom_data" "$DEFAULT_EEPROM_CUSTOM_DATA"
+
 check_config "dto_hat_current_supply" "$DEFAULT_DTO_HAT_CURRENT_SUPPLY"
 check_config "dto_i2c_enable" "$DEFAULT_I2C_ENABLE"
 check_config "dto_spi_enable" "$DEFAULT_SPI_ENABLE"
+check_config "dto_pwm_fan_enable" "$DEFAULT_PWM_FAN_ENABLE"
 check_config "dto_ir_enable" "$DEFAULT_IR_ENABLE"
 check_config "dto_ir_pin" "$DEFAULT_IR_PIN"
 check_config "dto_i2s_speaker_enable" "$DEFAULT_I2S_SPEAKER_ENABLE"
@@ -97,6 +100,12 @@ create_dtoverlay() {
         elif [ "$dto_spi_enable" == "0" ]; then
             spi_enable="关闭"
         fi
+        local pwm_fan_enable="未设置"
+        if [ "$dto_pwm_fan_enable" == "1" ]; then
+            pwm_fan_enable="开启"
+        elif [ "$dto_pwm_fan_enable" == "0" ]; then
+            pwm_fan_enable="关闭"
+        fi
         local ir_pin="引脚未设置"
         if [ "$dto_ir_pin" -ne 0 ]; then
             ir_pin="GPIO$dto_ir_pin"
@@ -135,11 +144,12 @@ create_dtoverlay() {
             "4" "根据模式切换供电电流: $hat_mode_current"
             "5" "I2C: $i2c_enable"
             "6" "SPI: $spi_enable"
-            "7" "IR: $ir"
-            "8" "I2S 喇叭: $i2s_speaker_enable"
-            "9" "GPIO Power Off: $gpio_power_off"
-            "10" "I2S 喇叭麦克风: $i2s_speaker_mic_enable"
-            "11" "OTG: $otg_enable"
+            "7" "PWM 风扇: $pwm_fan_enable"
+            "8" "IR: $ir"
+            "9" "I2S 喇叭: $i2s_speaker_enable"
+            "10" "GPIO Power Off: $gpio_power_off"
+            "11" "I2S 喇叭麦克风: $i2s_speaker_mic_enable"
+            "12" "OTG: $otg_enable"
             "=" "生成 DT Overlay"
         )
         select=$(whiptail --title "创建 DT Overlay" --menu "" 20 80 12 "${options[@]}" --yes-button "选择" --no-button "退出" 3>&1 1>&2 2>&3)
@@ -213,7 +223,24 @@ create_dtoverlay() {
                     sed -i "/^dto_spi_enable=/c\dto_spi_enable=$dto_spi_enable" "$CONFIG_FILE"
                 fi
             ;;
-            "7") # IR
+            "7") # PWM 风扇
+                local options=()
+                for ((i=0; i<${#ENABLE_TYPE[@]}; i+=2)); do
+                    j=$((i+1))
+                    if [ "${ENABLE_TYPE[$i]}" == "$dto_pwm_fan_enable" ]; then
+                        options+=("${ENABLE_TYPE[$i]}" "${ENABLE_TYPE[$j]}(*)")
+                    else
+                        options+=("${ENABLE_TYPE[$i]}" "${ENABLE_TYPE[$j]}")
+                    fi
+                done
+
+                local result=$(whiptail --title "PWM 风扇" --menu "选择是否开启PWM 风扇:" 15 78 7 ${options[@]} 3>&1 1>&2 2>&3)
+                if [ -n "$result" ]; then
+                    dto_pwm_fan_enable=$result
+                    sed -i "/^dto_pwm_fan_enable=/c\dto_pwm_fan_enable=$dto_pwm_fan_enable" "$CONFIG_FILE"
+                fi
+            ;;
+            "8") # IR
                 local options=()
                 for ((i=0; i<${#ENABLE_TYPE[@]}; i+=2)); do
                     j=$((i+1))
@@ -237,7 +264,7 @@ create_dtoverlay() {
                     fi
                 fi
             ;;
-            "8") # I2S DAC
+            "9") # I2S DAC
                 local options=()
                 for ((i=0; i<${#ENABLE_TYPE[@]}; i+=2)); do
                     j=$((i+1))
@@ -254,14 +281,14 @@ create_dtoverlay() {
                     sed -i "/^dto_i2s_speaker_enable=/c\dto_i2s_speaker_enable=$dto_i2s_speaker_enable" "$CONFIG_FILE"
                 fi
             ;;
-            "9") # GPIO Power Off
+            "10") # GPIO Power Off
                 result=$(whiptail --title "GPIO Power Off" --inputbox "GPIO Power off 设置，会在树莓派关机后，把一个GPIO引脚拉高。请输入GPIO引脚(0表示未设置):" 10 60 "$dto_gpio_poweroff" 3>&1 1>&2 2>&3)
                 if [ -n "$result" ]; then
                     dto_gpio_poweroff=$result
                     sed -i "/^dto_gpio_poweroff=/c\dto_gpio_poweroff=$dto_gpio_poweroff" "$CONFIG_FILE"
                 fi
             ;;
-            "10") # I2S喇叭麦克风
+            "11") # I2S喇叭麦克风
                 result=$(whiptail --title "I2S喇叭麦克风" --yesno "是否开启I2S喇叭麦克风？" --yes-button "开启" --no-button "未开启" 11 60 3>&1 1>&2 2>&3)
                 if [ $? -eq 0 ]; then
                     dto_i2s_speaker_mic_enable=1
@@ -270,7 +297,7 @@ create_dtoverlay() {
                 fi
                 sed -i "/^dto_i2s_speaker_mic_enable=/c\dto_i2s_speaker_mic_enable=$dto_i2s_speaker_mic_enable" "$CONFIG_FILE"
             ;;
-            "11") # OTG
+            "12") # OTG
                 result=$(whiptail --title "OTG" --yesno "是否开启OTG？" --yes-button "开启" --no-button "未开启" 11 60 3>&1 1>&2 2>&3)
                 if [ $? -eq 0 ]; then
                     dto_otg_enable=1
@@ -308,6 +335,10 @@ create_dtoverlay() {
                     msg+="   - 开启SPI\n"
                     command+=" --spi $dto_spi_enable"
                 fi
+                if [ "$dto_pwm_fan_enable" != "-" ]; then
+                    msg+="   - 开启PWM 风扇控制\n"
+                    command+=" --pwm-fan $dto_pwm_fan_enable"
+                fi
                 if [ "$dto_ir_enable" != "-" ]; then
                     if [ "$dto_ir_enable" -eq 1 ]; then
                         msg+="   - 开启IR GPIO$dto_ir_pin\n"
@@ -334,6 +365,8 @@ create_dtoverlay() {
                 msg+="是否生成 DT Overlay?"
                 if whiptail --title "确认" --yesno "$msg" 18 78; then
                     result=$(eval $command)
+                    # 复制生成的 config 到 overlays 目录
+                    cp "$CONFIG_FILE" "overlays/$name.config"
                     if [ $? -eq 0 ]; then
                         if whiptail --title "生成成功" --yesno "DTBO 文件: $dt_blob 生成成功，是否创建EEPROM？" 10 78; then
                             create_eeprom

@@ -7,6 +7,7 @@ parser.add_argument('-n', '--name', help='Name of dtoverlay', required=True)
 parser.add_argument('-c', '--hat-current-supply', help='Hat current Supply')
 parser.add_argument('-i', '--i2c', help='Enable I2C')
 parser.add_argument('-s', '--spi', help='Enable SPI')
+parser.add_argument('-F', '--pwm-fan', help='Enable PWM fan control')
 parser.add_argument('-r', '--ir', help='Enable IR')
 parser.add_argument('-g', '--ir-gpio', help='GPIO pin for IR')
 parser.add_argument('-d', '--i2s-speaker', help='Enable I2S Speaker')
@@ -14,6 +15,7 @@ parser.add_argument('-G', '--i2s-speaker-mic', action='store_true', help='Enable
 parser.add_argument('-p', '--gpio-poweroff', help='Enable GPIO poweroff')
 parser.add_argument('-m', '--hat-mode-current', action='store_true', help='Enable Hat mode change current')
 parser.add_argument('-o', '--otg', action='store_true', help='Enable OTG')
+
 parser.add_argument('-f', '--force', action='store_true', help='Force overwrite')
 args = parser.parse_args()
 
@@ -29,6 +31,20 @@ i2c_template='''{{
 
 spi_template='''{{
         target = <&spi0>;
+        __overlay__ {{
+            status = "{status}";
+        }};
+    }};'''
+
+pwm_fan_template_1 = '''{{
+        target = <&fan>;
+        __overlay__ {{
+            status = "{status}";
+        }};
+    }};'''
+
+pwm_fan_template_2 = '''{{
+        target = <&rp1_pwm1>;
         __overlay__ {{
             status = "{status}";
         }};
@@ -219,6 +235,14 @@ if args.spi:
     status = "okay" if args.spi == "1" else "disabled"
     node = spi_template.format(status=status)
     fragments += fragment_template.format(count=fragment_count, node=node)
+    fragment_count += 1
+if args.pwm_fan:
+    status = "okay" if args.pwm_fan == "1" else "disabled"
+    node1 = pwm_fan_template_1.format(status=status)
+    node2 = pwm_fan_template_2.format(status=status)
+    fragments += fragment_template.format(count=fragment_count, node=node1)
+    fragment_count += 1
+    fragments += fragment_template.format(count=fragment_count, node=node2)
     fragment_count += 1
 if args.ir:
     node1 = ir_template_1.format(pin=int(args.ir_gpio))

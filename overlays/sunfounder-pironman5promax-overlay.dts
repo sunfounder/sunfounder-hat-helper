@@ -17,6 +17,18 @@
         };
     };
     fragment@2 {
+        target = <&fan>;
+        __overlay__ {
+            status = "okay";
+        };
+    };
+    fragment@3 {
+        target = <&rp1_pwm1>;
+        __overlay__ {
+            status = "okay";
+        };
+    };
+    fragment@4 {
         target-path = "/";
         __overlay__ {
             gpio_ir: ir-receiver@d {
@@ -34,7 +46,7 @@
             };
         };
     };
-    fragment@3 {
+    fragment@5 {
         target = <&gpio>;
         __overlay__ {
             gpio_ir_pins: gpio_ir_pins@d {
