@@ -12,9 +12,10 @@ EEPMAKE = os.path.join(script_directory, "eepmake")
 EEPROM_DIR = os.path.join(script_directory, "../eeproms")
 
 parser = argparse.ArgumentParser(description='Create a new hat+ eeprom')
-parser.add_argument('-i', '--id', help='Product ID, ie: P1903V12')
+parser.add_argument('-i', '--id', help='PCB ID, ie: O1903V12')
 parser.add_argument('-n', '--name', help='Hat name')
 parser.add_argument('-v', '--vendor', default="SunFounder", help='Hat vendor')
+parser.add_argument('-C', '--current-supply', default="0", help='How much current the HAT+ can supply, in milliamps')
 parser.add_argument('-d', '--device-tree', help='Device tree overlay, ie: hifiberry-dac')
 parser.add_argument('-c', '--custom-data', help='Custom data')
 parser.add_argument('-f', '--force', action='store_true', help='Force overwrite')
@@ -28,7 +29,7 @@ def read_arg(arg, prompt, allow_empty=False):
             return arg
         arg = input(prompt)
 
-id = read_arg(args.id, "Enter Product ID(ie P1903V12): ")
+id = read_arg(args.id, "Enter PCB ID(ie O1903V12): ")
 name = read_arg(args.name, "Enter Hat name: ")
 if args.id == None:
     device_tree = read_arg(args.device_tree, "Enter device tree overlay: ", allow_empty=True)
@@ -52,6 +53,7 @@ product_id 0x{product_id:04x}
 product_ver 0x{product_ver:04x}
 vendor "{args.vendor}"
 product "{name}"
+current_supply "{args.current_supply}"
 """
 
 if device_tree != None and len(device_tree) > 0:

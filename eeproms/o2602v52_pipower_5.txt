@@ -1,0 +1,7 @@
+product_uuid 9daeea78-0000-0a2a-0034-582369ac3e02
+product_id 0x0a2a
+product_ver 0x0034
+vendor "SunFounder"
+product "PiPower 5"
+current_supply "5000"
+dt_blob "sunfounder-pipower5.dtbo"

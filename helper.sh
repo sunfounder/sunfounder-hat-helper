@@ -392,8 +392,9 @@ create_eeprom() {
             "1" "产品编号: $eeprom_pcb_code (*)" \
             "2" "产品名称: $product_name (*)" \
             "3" "公司名称: $vendor (*)" \
-            "4" "DT overlay: $dt_blob" \
-            "5" "自定义数据: $eeprom_custom_data" \
+            "4" "供电电流: $dto_hat_current_supply mA" \
+            "5" "DT overlay: $dt_blob" \
+            "6" "自定义数据: $eeprom_custom_data" \
             "=" "生成 EEPROM" \
         3>&1 1>&2 2>&3)
 
@@ -422,14 +423,21 @@ create_eeprom() {
                     sed -i "/^vendor=/c\vendor=\"$vendor\"" "$CONFIG_FILE"
                 fi
             ;;
-            "4") # DT overlay
+            "4") # 供电电流
+                result=$(whiptail --title "供电电流" --inputbox "请输入供电电流(mA, 没有写:0):" 10 60 "$dto_hat_current_supply" 3>&1 1>&2 2>&3)
+                if [ -n "$result" ]; then
+                    dto_hat_current_supply=$result
+                    sed -i "/^dto_hat_current_supply=/c\dto_hat_current_supply=\"$dto_hat_current_supply\"" "$CONFIG_FILE"
+                fi
+            ;;
+            "5") # DT overlay
                 result=$(whiptail --title "输入DT overlay" --inputbox "请输入DT overlay:" 10 60 "$dt_blob" 3>&1 1>&2 2>&3)
                 if [ -n "$result" ]; then
                     dt_blob=$result
                     sed -i "/^dt_blob=/c\dt_blob=\"$dt_blob\"" "$CONFIG_FILE"
                 fi
             ;;
-            "5") # 自定义数据
+            "6") # 自定义数据
                 result=$(whiptail --title "自定义数据" --inputbox "请输入自定义数据:" 10 60 "$eeprom_custom_data" 3>&1 1>&2 2>&3)
                 if [ -n "$result" ]; then
                     eeprom_custom_data=$result
@@ -441,8 +449,8 @@ create_eeprom() {
                 if [ -z "$eeprom_pcb_code" ] || [ -z "$product_name" ] || [ -z "$vendor" ]; then
                     whiptail --title "错误" --msgbox "请先输入所有的信息" 8 78
                 else
-                    command="python3 scripts/create_eeprom.py --less --id $eeprom_pcb_code --name \"$product_name\" --vendor \"$vendor\" --device-tree \"$dt_blob\" --custom-data \"$eeprom_custom_data\" -f"
-                    if whiptail --title "确认" --yesno "你输入了以下信息:\n\n产品编号: $eeprom_pcb_code\n产品名称: $product_name\n公司名称: $vendor\nDT overlay: $dt_blob\n自定义数据: $eeprom_custom_data\n\n生成命令: $command\n\n是否开始生成?" 18 78; then
+                    command="python3 scripts/create_eeprom.py --less --id $eeprom_pcb_code --name \"$product_name\" --vendor \"$vendor\" --current-supply \"$dto_hat_current_supply\" --device-tree \"$dt_blob\" --custom-data \"$eeprom_custom_data\" -f"
+                    if whiptail --title "确认" --yesno "你输入了以下信息:\n\n产品编号: $eeprom_pcb_code\n产品名称: $product_name\n公司名称: $vendor\n供电电流: $dto_hat_current_supply mA\nDT overlay: $dt_blob\n自定义数据: $eeprom_custom_data\n\n生成命令: $command\n\n是否开始生成?" 18 78; then
                         # 在这里添加生成 EEPROM 的代码、
                         result=$(eval $command)
                         if [ $? -eq 0 ]; then
